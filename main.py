@@ -1,5 +1,4 @@
 from typing import Union, Annotated
-import multipart
 from fastapi import FastAPI, Form, File, UploadFile
 from pydantic import BaseModel
 import base64
@@ -8,6 +7,7 @@ from io import BytesIO
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
+from model import perform_inference
 
 app = FastAPI()
 
@@ -48,14 +48,11 @@ async def detect(image: Annotated[str, Form()]):
     # Open the image using PIL
     pil_image = Image.open(image_stream)
 
-    # DEBUG
-    pil_image.save("test.jpg")
-
-    # insert segmentation and identification here
-
+    perform_inference(pil_image)
+    finished = Image.open("masked/masked.png")
     # encode the image in base64
     image_bytes = BytesIO()
-    pil_image.save(image_bytes, format="JPEG")
+    finished.save(image_bytes, format="JPEG")
     base64_string = base64.b64encode(image_bytes.getvalue()).decode("utf-8")
-    # send it back as a response
+
     return {"image": base64_string}
